@@ -1,6 +1,6 @@
 {
   "name": "vt-geojson",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Extract GeoJSON from Mapbox vector tiles.",
   "repository": {
     "type": "git",
