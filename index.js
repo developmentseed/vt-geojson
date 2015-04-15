@@ -30,7 +30,10 @@ function vectorTilesToGeoJSON (uri, tiles) {
     var y = tile[1]
     var z = tile[2]
     source.getTile(z, x, y, function (err, tiledata, opts) {
-      if (err) { return next(err) }
+      // TODO: just swallowing these errors so as to not fail if
+      // source doesn't contain a particular tile... this should
+      // probably be configurable or something
+      if (err) { console.error(z, x, y, err); return next() }
 
       if (opts['Content-Encoding'] === 'gzip') {
         zlib.gunzip(tiledata, processTile)
