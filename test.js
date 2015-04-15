@@ -1,7 +1,7 @@
 var fs = require('fs')
 var test = require('tape')
 var concat = require('concat-stream')
-var cover = require('./tool/cover.js')
+var cover = require('./lib/cover')
 var vtgj = require('./')
 
 var tileUri = 'mbtiles://' + __dirname + '/data/test.mbtiles'

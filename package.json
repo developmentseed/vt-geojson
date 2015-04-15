@@ -21,12 +21,12 @@
     "through2": "^0.6.5",
     "tilejson": "^0.12.0",
     "tilelive": "^5.6.2",
-    "vector-tile": "^1.1.2"
+    "vector-tile": "^1.1.2",
+    "tile-cover": "^2.4.1",
+    "turf-extent": "^1.0.4"
   },
   "devDependencies": {
     "standard": "^3.6.1",
-    "tape": "^4.0.0",
-    "tile-cover": "^2.4.1",
-    "turf-extent": "^1.0.4"
+    "tape": "^4.0.0"
   }
 }
