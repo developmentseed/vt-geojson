@@ -26,9 +26,9 @@ function vectorTilesToGeoJSON (uri, tiles) {
     if (tiles.length === 0) return self.push(null)
 
     var tile = tiles.pop()
-    var x = tile[1]
-    var y = tile[2]
-    var z = tile[0]
+    var x = tile[0]
+    var y = tile[1]
+    var z = tile[2]
     source.getTile(z, x, y, function (err, tiledata, opts) {
       if (err) { return next(err) }
 
@@ -92,7 +92,7 @@ if (require.main === module) {
       .pipe(through(function (line, enc, next) {
         var t = line.toString().split(' ').map(Number)
         if (t.length === 3) {
-          tiles.push([t[2], t[0], t[1]])
+          tiles.push(t)
         }
         next()
       }))
