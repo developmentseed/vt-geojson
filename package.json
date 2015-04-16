@@ -26,6 +26,7 @@
     "turf-extent": "^1.0.4"
   },
   "devDependencies": {
+    "concat-stream": "^1.4.8",
     "standard": "^3.6.1",
     "tape": "^4.0.0"
   }
