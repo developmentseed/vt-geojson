@@ -47,7 +47,9 @@ function vectorTilesToGeoJSON (uri, tiles) {
 
   function read (_, next) {
     var self = this
-    if (tiles.length === 0) return self.push(null)
+    if (tiles.length === 0) {
+      return self.push(null)
+    }
 
     var tile = tiles.pop()
     var x = tile[0]
@@ -104,7 +106,6 @@ if (require.main === module) {
       geojson = geojson.features ? geojson.features[0] : geojson
       geojson = geojson.geometry
       tiles = cover.tiles(geojson, { min_zoom: tiles[0], max_zoom: tiles[1] })
-      process.exit()
       vectorTilesToGeoJSON(uri, tiles).pipe(json)
     }))
   } else {
