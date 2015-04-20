@@ -7,8 +7,9 @@ var JSONStream = require('JSONStream')
 var tilelive = require('tilelive')
 var cover = require('tile-cover')
 var bboxPoly = require('turf-bbox-polygon')
-require('mbtiles').registerProtocols(tilelive)
+var concat = require('concat-stream')
 require('tilejson').registerProtocols(tilelive)
+require('mbtiles').registerProtocols(tilelive)
 
 module.exports = vectorTilesToGeoJSON
 
@@ -18,7 +19,6 @@ module.exports = vectorTilesToGeoJSON
  * tiles.
  */
 function vectorTilesToGeoJSON (uri, tiles) {
-  tiles = tiles ? [].concat(tiles) : null
   var source = null
 
   return from.obj(function (size, next) {
@@ -31,11 +31,13 @@ function vectorTilesToGeoJSON (uri, tiles) {
         source = src
         source.getInfo(function (err, info) {
           if (err) { return next(err) }
-          if (tiles === null) {
-            tiles = cover.tiles(
-              bboxPoly(info.bounds).geometry,
-              { min_zoom: info.minzoom, max_zoom: info.maxzoom }
-            )
+          var limits = { min_zoom: info.minzoom, max_zoom: info.maxzoom }
+          if (tiles.length === 0) {
+            tiles = cover.tiles(bboxPoly(info.bounds).geometry, limits)
+          } else if (tiles.length === 4 && typeof tiles[0] === 'number') {
+            tiles = cover.tiles(bboxPoly(tiles).geometry, limits)
+          } else if (tiles.length === 3 && typeof tiles[0] === 'number') {
+            tiles = [tiles]
           }
           read.call(self, size, next)
         })
@@ -87,7 +89,7 @@ function vectorTilesToGeoJSON (uri, tiles) {
 
 if (require.main === module) {
   var uri = process.argv[2]
-  if (!/^\w*\:\/\//.test(uri)) {
+  if (!/^[^\/]*\:\/\//.test(uri)) {
     uri = 'mbtiles://' + path.resolve(uri)
   }
 
@@ -95,6 +97,17 @@ if (require.main === module) {
     '\n,\n', '] }')
   json.pipe(process.stdout)
 
-  var tiles = process.argv.length <= 3 ? null : [process.argv.slice(3, 6).map(Number)]
-  vectorTilesToGeoJSON(uri, tiles).pipe(json)
+  var tiles = process.argv.slice(3).map(Number)
+  if (tiles.length === 2) {
+    process.stdin.pipe(concat(function (data) {
+      var geojson = JSON.parse(data)
+      geojson = geojson.features ? geojson.features[0] : geojson
+      geojson = geojson.geometry
+      tiles = cover.tiles(geojson, { min_zoom: tiles[0], max_zoom: tiles[1] })
+      process.exit()
+      vectorTilesToGeoJSON(uri, tiles).pipe(json)
+    }))
+  } else {
+    vectorTilesToGeoJSON(uri, tiles).pipe(json)
+  }
 }
