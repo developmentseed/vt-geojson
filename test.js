@@ -21,6 +21,20 @@ test('basic', function (t) {
   var tiles = cover(original, limits)
   vtgj(tileUri, tiles)
   .on('data', function (data) {
-    t.equal(JSON.stringify(data), JSON.stringify(expected.shift()))
+    var exp = expected.shift()
+    exp.geometry.coordinates = roundCoordinates(exp.geometry.coordinates, 1e4)
+    data.geometry.coordinates = roundCoordinates(data.geometry.coordinates, 1e4)
+
+    t.deepEqual(exp, data)
   })
 })
+
+function roundCoordinates (coordinates, p) {
+  if (!coordinates.length || coordinates.length === 0) {
+    return coordinates
+  } else if (typeof coordinates[0] === 'number') {
+    return coordinates.map(function (x) { return Math.round(x * p) / p })
+  } else {
+    return coordinates.map(function (c) { return roundCoordinates(c, p) })
+  }
+}
