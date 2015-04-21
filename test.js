@@ -28,7 +28,7 @@ test('basic', function (t) {
   })
 })
 
-var accessToken = 'pk.eyJ1IjoiZGV2c2VlZCIsImEiOiJic3B1SF9zIn0.j2046F2UZF5o4ZS1XM-27g'
+var accessToken = process.env.MAPBOX_API_KEY || require('./local.js').MAPBOX_API_KEY
 
 test('remote', function (t) {
   var tileUri = 'tilejson+http://api.tiles.mapbox.com/v4/devseed.73553afc.json?access_token=' + accessToken
