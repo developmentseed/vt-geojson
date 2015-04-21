@@ -4,12 +4,11 @@ var from = require('from2')
 var Pbf = require('pbf')
 var VectorTile = require('vector-tile').VectorTile
 var JSONStream = require('JSONStream')
-var tilelive = require('tilelive')
 var cover = require('tile-cover')
 var bboxPoly = require('turf-bbox-polygon')
 var concat = require('concat-stream')
-require('tilejson').registerProtocols(tilelive)
-require('mbtiles').registerProtocols(tilelive)
+
+var loadSource = require('./lib/tilelive-sources')
 
 module.exports = vectorTilesToGeoJSON
 
@@ -26,7 +25,7 @@ function vectorTilesToGeoJSON (uri, tiles) {
     if (source) {
       return read.call(self, size, next)
     } else {
-      tilelive.load(uri, function (err, src) {
+      loadSource(uri, function (err, src) {
         if (err) { return next(err) }
         source = src
         source.getInfo(function (err, info) {
