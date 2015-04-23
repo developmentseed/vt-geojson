@@ -35,6 +35,7 @@
     "tape": "^4.0.0"
   },
   "browser": {
+    "zlib": false,
     "./lib/tilelive-sources.js": "./lib/browser/tilelive-sources.js"
   }
 }
