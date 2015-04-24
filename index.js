@@ -22,13 +22,19 @@ module.exports = vectorTilesToGeoJSON
  *  - A single [x, y, z] tile.
  *  - A [minx, miny, maxx, maxy] bounding box
  *  - Omitted (will attempt to read entire extent of the tile source.
+ * @param {Array} layers - The layers to read from the tiles. If empty,
+ * read all layers.
  *
  * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects.
  * Emits 'warning' events with { tile, error } when a tile from the
  * requested set is not found.
  */
-function vectorTilesToGeoJSON (uri, tiles) {
+function vectorTilesToGeoJSON (uri, tiles, layers) {
   if (!tiles) tiles = []
+  if (!layers && tiles.length > 0 && typeof tiles[0] === 'string') {
+    layers = tiles
+  }
+  if (layers && layers.length === 0) layers = null
   var stream = through.obj()
 
   loadSource(uri, function (err, source) {
@@ -93,8 +99,13 @@ function vectorTilesToGeoJSON (uri, tiles) {
         var vt = new VectorTile(new Pbf(tiledata))
 
         Object.keys(vt.layers)
+        .filter(function (ln) {
+          return !layers || layers.indexOf(ln) >= 0
+        })
         .forEach(function (ln) {
           var layer = vt.layers[ln]
+          if (layers && layers.indexOf(ln) < 0) return
+
           for (var i = 0; i < layer.length; i++) {
             var feat = layer.feature(i).toGeoJSON(x, y, z)
             stream.write(feat)
