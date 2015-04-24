@@ -1,66 +1,81 @@
 var path = require('path')
 var zlib = require('zlib')
-var from = require('from2')
+var through = require('through2')
 var Pbf = require('pbf')
 var VectorTile = require('vector-tile').VectorTile
 var JSONStream = require('JSONStream')
 var cover = require('tile-cover')
 var bboxPoly = require('turf-bbox-polygon')
 var concat = require('concat-stream')
-
+//
+// this is abstracted out for browserify purposes
 var loadSource = require('./lib/tilelive-sources')
 
 module.exports = vectorTilesToGeoJSON
 
 /**
- * Given a Tilelive uri for a vector tile source and an array of [z, x, y]
- * tiles, return a GeoJSON FeatureCollection of all features in those
- * tiles.
+ * Stream GeoJSON from a Mapbox Vector Tile source
+ *
+ * @param {String} uri - the tilelive URI for the vector tile source to use.
+ * @param {Array} tiles - The tiles to read from the tilelive source. Can be:
+ *  - An array of [x, y, z] tiles.
+ *  - A single [x, y, z] tile.
+ *  - A [minx, miny, maxx, maxy] bounding box
+ *  - Omitted (will attempt to read entire extent of the tile source.
+ *
+ * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects.
+ * Emits 'warning' events with { tile, error } when a tile from the
+ * requested set is not found.
  */
 function vectorTilesToGeoJSON (uri, tiles) {
-  var source = null
+  if (!tiles) tiles = []
+  var stream = through.obj()
 
-  return from.obj(function (size, next) {
-    var self = this
-    if (source) {
-      return read.call(self, size, next)
-    } else {
-      loadSource(uri, function (err, src) {
-        if (err) { return next(err) }
-        source = src
-        source.getInfo(function (err, info) {
-          if (err) { return next(err) }
-          var limits = { min_zoom: info.minzoom, max_zoom: info.maxzoom }
-          if (tiles.length === 0) {
-            tiles = cover.tiles(bboxPoly(info.bounds).geometry, limits)
-          } else if (tiles.length === 4 && typeof tiles[0] === 'number') {
-            tiles = cover.tiles(bboxPoly(tiles).geometry, limits)
-          } else if (tiles.length === 3 && typeof tiles[0] === 'number') {
-            tiles = [tiles]
-          }
-          read.call(self, size, next)
-        })
-      })
-    }
+  loadSource(uri, function (err, source) {
+    if (err) return loadError(err)
+
+    source.getInfo(function (err, info) {
+      if (err) return loadError(err)
+
+      var limits = { min_zoom: info.minzoom, max_zoom: info.maxzoom }
+      if (tiles.length === 0) {
+        tiles = cover.tiles(bboxPoly(info.bounds).geometry, limits)
+      } else if (tiles.length === 4 && typeof tiles[0] === 'number') {
+        tiles = cover.tiles(bboxPoly(tiles).geometry, limits)
+      } else if (tiles.length === 3 && typeof tiles[0] === 'number') {
+        tiles = [tiles]
+      }
+
+      (function next () {
+        if (tiles.length === 0) return stream.end()
+        var tile = tiles.pop()
+        writeTile(source, tile, stream, next)
+      })()
+    })
   })
 
-  function read (_, next) {
-    var self = this
-    if (tiles.length === 0) {
-      return self.push(null)
-    }
+  return stream
 
-    var tile = tiles.pop()
+  function loadError (err) {
+    stream.emit('error', err)
+    stream.end()
+  }
+
+  function tileError (tile, err) {
+    stream.emit('warning', {
+      tile: tile,
+      error: err
+    })
+  }
+
+  function writeTile (source, tile, stream, next) {
     var x = tile[0]
     var y = tile[1]
     var z = tile[2]
     source.getTile(z, x, y, function (err, tiledata, opts) {
-      // TODO: just swallowing these errors so as to not fail if
-      // source doesn't contain a particular tile... this should
-      // probably be configurable or something
       if (err) {
-        console.error(z, x, y, err)
-        return read.call(self, _, next)
+        tileError(tile, err)
+        return next()
       }
 
       if (opts['Content-Encoding'] === 'gzip') {
@@ -70,19 +85,23 @@ function vectorTilesToGeoJSON (uri, tiles) {
       }
 
       function processTile (err, tiledata) {
-        if (err) { return next(err) }
+        if (err) {
+          tileError(tile, err)
+          return next()
+        }
 
         var vt = new VectorTile(new Pbf(tiledata))
 
         Object.keys(vt.layers)
-          .forEach(function (ln) {
-            var layer = vt.layers[ln]
-            for (var i = 0; i < layer.length; i++) {
-              var feat = layer.feature(i).toGeoJSON(x, y, z)
-              self.push(feat)
-            }
-          })
-        read.call(self, _, next)
+        .forEach(function (ln) {
+          var layer = vt.layers[ln]
+          for (var i = 0; i < layer.length; i++) {
+            var feat = layer.feature(i).toGeoJSON(x, y, z)
+            stream.write(feat)
+          }
+        })
+
+        next()
       }
     })
   }
