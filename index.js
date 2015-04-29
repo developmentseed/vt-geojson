@@ -14,9 +14,8 @@ module.exports = vectorTilesToGeoJSON
  * Stream GeoJSON from a Mapbox Vector Tile source
  *
  * @param {String} uri - the tilelive URI for the vector tile source to use.
- * @param {Array} layers - The layers to read from the tiles. If empty, read all layers.
  * @param {Array} tiles - The tiles to read from the tilelive source. Can be: an array of `[x, y, z]` tiles, a single `[x, y, z]` tile, a `[minx, miny, maxx, maxy]` bounding box, or omitted (will attempt to read entire extent of the tile source).
- *
+ * @param {Array} layers - The layers to read from the tiles. If empty, read all layers.
  * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects.
  * Emits `warning` events with `{ tile, error }` when a tile from the
  * requested set is not found.

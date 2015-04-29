@@ -18,7 +18,7 @@ var polygon = JSON.parse(fs.readFileSync('my-polygon.geojson'))
 var source = 'tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN'
 
 // get an array of tiles ([x, y, z]) that we want to pull data from.
-var tiles = cover.tiles(polygon.geometry, limits)
+var tiles = cover.tiles(polygon.geometry, { min_zoom: 10, max_zoom: 12 })
 
 // stream geojson from the chosen tiles:
 vtGeoJson(source, tiles)
