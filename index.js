@@ -1,13 +1,10 @@
-var path = require('path')
 var zlib = require('zlib')
-var through = require('through2')
 var Pbf = require('pbf')
-var VectorTile = require('vector-tile').VectorTile
-var JSONStream = require('JSONStream')
+var through = require('through2')
 var cover = require('tile-cover')
+var VectorTile = require('vector-tile').VectorTile
 var bboxPoly = require('turf-bbox-polygon')
-var concat = require('concat-stream')
-//
+
 // this is abstracted out for browserify purposes
 var loadSource = require('./lib/tilelive-sources')
 
@@ -17,16 +14,11 @@ module.exports = vectorTilesToGeoJSON
  * Stream GeoJSON from a Mapbox Vector Tile source
  *
  * @param {String} uri - the tilelive URI for the vector tile source to use.
- * @param {Array} tiles - The tiles to read from the tilelive source. Can be:
- *  - An array of [x, y, z] tiles.
- *  - A single [x, y, z] tile.
- *  - A [minx, miny, maxx, maxy] bounding box
- *  - Omitted (will attempt to read entire extent of the tile source.
- * @param {Array} layers - The layers to read from the tiles. If empty,
- * read all layers.
+ * @param {Array} layers - The layers to read from the tiles. If empty, read all layers.
+ * @param {Array} tiles - The tiles to read from the tilelive source. Can be: an array of `[x, y, z]` tiles, a single `[x, y, z]` tile, a `[minx, miny, maxx, maxy]` bounding box, or omitted (will attempt to read entire extent of the tile source).
  *
  * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects.
- * Emits 'warning' events with { tile, error } when a tile from the
+ * Emits `warning` events with `{ tile, error }` when a tile from the
  * requested set is not found.
  */
 function vectorTilesToGeoJSON (uri, tiles, layers) {
@@ -115,29 +107,5 @@ function vectorTilesToGeoJSON (uri, tiles, layers) {
         next()
       }
     })
-  }
-}
-
-if (require.main === module) {
-  var uri = process.argv[2]
-  if (!/^[^\/]*\:\/\//.test(uri)) {
-    uri = 'mbtiles://' + path.resolve(uri)
-  }
-
-  var json = JSONStream.stringify('{ "type": "FeatureCollection", "features": [ ',
-    '\n,\n', '] }')
-  json.pipe(process.stdout)
-
-  var tiles = process.argv.slice(3).map(Number)
-  if (tiles.length === 2) {
-    process.stdin.pipe(concat(function (data) {
-      var geojson = JSON.parse(data)
-      geojson = geojson.features ? geojson.features[0] : geojson
-      geojson = geojson.geometry
-      tiles = cover.tiles(geojson, { min_zoom: tiles[0], max_zoom: tiles[1] })
-      vectorTilesToGeoJSON(uri, tiles).pipe(json)
-    }))
-  } else {
-    vectorTilesToGeoJSON(uri, tiles).pipe(json)
   }
 }

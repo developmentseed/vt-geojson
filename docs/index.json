@@ -1,0 +1,130 @@
+[
+  {
+    "description": "Stream GeoJSON from a Mapbox Vector Tile source",
+    "tags": [
+      {
+        "title": "param",
+        "description": "the tilelive URI for the vector tile source to use.",
+        "type": {
+          "type": "NameExpression",
+          "name": "String"
+        },
+        "name": "uri"
+      },
+      {
+        "title": "param",
+        "description": "The tiles to read from the tilelive source. Can be:\n- An array of [x, y, z] tiles.\n- A single [x, y, z] tile.\n- A [minx, miny, maxx, maxy] bounding box\n- Omitted (will attempt to read entire extent of the tile source.",
+        "type": {
+          "type": "NameExpression",
+          "name": "Array"
+        },
+        "name": "tiles"
+      },
+      {
+        "title": "param",
+        "description": "The layers to read from the tiles. If empty,\nread all layers.",
+        "type": {
+          "type": "NameExpression",
+          "name": "Array"
+        },
+        "name": "layers"
+      },
+      {
+        "title": "returns",
+        "description": "A stream of GeoJSON Feature objects.\nEmits 'warning' events with { tile, error } when a tile from the\nrequested set is not found.",
+        "type": {
+          "type": "TypeApplication",
+          "expression": {
+            "type": "NameExpression",
+            "name": "ReadableStream"
+          },
+          "applications": [
+            {
+              "type": "NameExpression",
+              "name": "Feature"
+            }
+          ]
+        }
+      },
+      {
+        "title": "name",
+        "name": "vectorTilesToGeoJSON"
+      },
+      {
+        "title": "kind",
+        "kind": "function"
+      }
+    ],
+    "context": {
+      "loc": {
+        "start": {
+          "line": 29,
+          "column": 0
+        },
+        "end": {
+          "line": 116,
+          "column": 1
+        }
+      },
+      "file": "/Users/anand/ds/vt-geojson/index.js",
+      "code": "var zlib = require('zlib')\nvar Pbf = require('pbf')\nvar through = require('through2')\nvar cover = require('tile-cover')\nvar VectorTile = require('vector-tile').VectorTile\nvar bboxPoly = require('turf-bbox-polygon')\n\n// this is abstracted out for browserify purposes\nvar loadSource = require('./lib/tilelive-sources')\n\nmodule.exports = vectorTilesToGeoJSON\n\n/**\n * Stream GeoJSON from a Mapbox Vector Tile source\n *\n * @param {String} uri - the tilelive URI for the vector tile source to use.\n * @param {Array} tiles - The tiles to read from the tilelive source. Can be:\n * - An array of [x, y, z] tiles.\n * - A single [x, y, z] tile.\n * - A [minx, miny, maxx, maxy] bounding box\n * - Omitted (will attempt to read entire extent of the tile source.\n * @param {Array} layers - The layers to read from the tiles. If empty,\n * read all layers.\n *\n * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects.\n * Emits 'warning' events with { tile, error } when a tile from the\n * requested set is not found.\n */\nfunction vectorTilesToGeoJSON (uri, tiles, layers) {\n  if (!tiles) tiles = []\n  if (!layers && tiles.length > 0 && typeof tiles[0] === 'string') {\n    layers = tiles\n  }\n  if (layers && layers.length === 0) layers = null\n  var stream = through.obj()\n\n  loadSource(uri, function (err, source) {\n    if (err) return loadError(err)\n\n    source.getInfo(function (err, info) {\n      if (err) return loadError(err)\n\n      var limits = { min_zoom: info.minzoom, max_zoom: info.maxzoom }\n      if (tiles.length === 0) {\n        tiles = cover.tiles(bboxPoly(info.bounds).geometry, limits)\n      } else if (tiles.length === 4 && typeof tiles[0] === 'number') {\n        tiles = cover.tiles(bboxPoly(tiles).geometry, limits)\n      } else if (tiles.length === 3 && typeof tiles[0] === 'number') {\n        tiles = [tiles]\n      }\n\n      (function next () {\n        if (tiles.length === 0) return stream.end()\n        var tile = tiles.pop()\n        writeTile(source, tile, stream, next)\n      })()\n    })\n  })\n\n  return stream\n\n  function loadError (err) {\n    stream.emit('error', err)\n    stream.end()\n  }\n\n  function tileError (tile, err) {\n    stream.emit('warning', {\n      tile: tile,\n      error: err\n    })\n  }\n\n  function writeTile (source, tile, stream, next) {\n    var x = tile[0]\n    var y = tile[1]\n    var z = tile[2]\n    source.getTile(z, x, y, function (err, tiledata, opts) {\n      if (err) {\n        tileError(tile, err)\n        return next()\n      }\n\n      if (opts['Content-Encoding'] === 'gzip') {\n        zlib.gunzip(tiledata, processTile)\n      } else {\n        processTile(null, tiledata)\n      }\n\n      function processTile (err, tiledata) {\n        if (err) {\n          tileError(tile, err)\n          return next()\n        }\n\n        var vt = new VectorTile(new Pbf(tiledata))\n\n        Object.keys(vt.layers)\n        .filter(function (ln) {\n          return !layers || layers.indexOf(ln) >= 0\n        })\n        .forEach(function (ln) {\n          var layer = vt.layers[ln]\n          if (layers && layers.indexOf(ln) < 0) return\n\n          for (var i = 0; i < layer.length; i++) {\n            var feat = layer.feature(i).toGeoJSON(x, y, z)\n            stream.write(feat)\n          }\n        })\n\n        next()\n      }\n    })\n  }\n}"
+    },
+    "params": [
+      {
+        "title": "param",
+        "description": "the tilelive URI for the vector tile source to use.",
+        "type": {
+          "type": "NameExpression",
+          "name": "String"
+        },
+        "name": "uri"
+      },
+      {
+        "title": "param",
+        "description": "The tiles to read from the tilelive source. Can be:\n- An array of [x, y, z] tiles.\n- A single [x, y, z] tile.\n- A [minx, miny, maxx, maxy] bounding box\n- Omitted (will attempt to read entire extent of the tile source.",
+        "type": {
+          "type": "NameExpression",
+          "name": "Array"
+        },
+        "name": "tiles"
+      },
+      {
+        "title": "param",
+        "description": "The layers to read from the tiles. If empty,\nread all layers.",
+        "type": {
+          "type": "NameExpression",
+          "name": "Array"
+        },
+        "name": "layers"
+      }
+    ],
+    "returns": [
+      {
+        "title": "returns",
+        "description": "A stream of GeoJSON Feature objects.\nEmits 'warning' events with { tile, error } when a tile from the\nrequested set is not found.",
+        "type": {
+          "type": "TypeApplication",
+          "expression": {
+            "type": "NameExpression",
+            "name": "ReadableStream"
+          },
+          "applications": [
+            {
+              "type": "NameExpression",
+              "name": "Feature"
+            }
+          ]
+        }
+      }
+    ],
+    "name": "vectorTilesToGeoJSON",
+    "kind": "function",
+    "members": {
+      "instance": [],
+      "static": []
+    },
+    "path": [
+      "vectorTilesToGeoJSON"
+    ]
+  }
+]

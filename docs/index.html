@@ -1,0 +1,91 @@
+<html>
+<head>
+  <title>vt-geojson 1.0.8</title>
+  <link href='assets/bass.css' type='text/css' rel='stylesheet' />
+  <link href='assets/style.css' type='text/css' rel='stylesheet' />
+  <link href='assets/github.css' type='text/css' rel='stylesheet' />
+</head>
+<body class='documentation'>
+  <div class='px2'>
+    <div class='clearfix flex flex-stretch mxn2'>
+      <div class='documentation-sidebar relative top-0 bottom-0 right-0 px2 py2 sm-col-3 md-col-2 sm-show'>
+        <div class='font-smaller fixed sm-col-3 md-col-2 top-0 bottom-0 left-0 overflow-auto black bg-cloudy'>
+          <a href="/" class="h5 button block button-transparent">vt-geojson 1.0.8</a>
+          <div class='px2'>
+              <a
+                href='#vectortilestogeojson'
+                class='regular block'>
+                <code>vectorTilesToGeoJSON</code>
+              </a>
+          </div>
+        </div>
+      </div>
+      <div class='sm-col sm-col-9 md-col-10 flex flex-column'>
+        <div class='flex-auto full-width'>
+<section id='vectortilestogeojson'class='mt2 mb2 py1 px3 keyline-top'>
+  <h3 class='regular'>
+    <a class='black' href='#vectortilestogeojson'>
+      <code>
+        vectorTilesToGeoJSON<span class='gray'>(uri, tiles, layers)</span>
+      </code>
+    </a>
+  </h3>
+  <p>Stream GeoJSON from a Mapbox Vector Tile source</p>
+
+
+    <p>
+      <table class='table-light overflow-hidden bg-cloudy-light'>
+        <thead>
+          <th class='col-3'>parameter</th>
+          <th class='col-3'>type</th>
+          <th class='col-6'>description</th>
+        </thead>
+          <tr>
+            <td>uri</td>
+            <td><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String">String</a></code></td>
+            <td><p>the tilelive URI for the vector tile source to use.</p>
+</td>
+          </tr>
+          <tr>
+            <td>tiles</td>
+            <td><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></code></td>
+            <td><p>The tiles to read from the tilelive source. Can be:</p>
+<ul>
+<li>An array of [x, y, z] tiles.</li>
+<li>A single [x, y, z] tile.</li>
+<li>A [minx, miny, maxx, maxy] bounding box</li>
+<li>Omitted (will attempt to read entire extent of the tile source.</li>
+</ul>
+</td>
+          </tr>
+          <tr>
+            <td>layers</td>
+            <td><code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array">Array</a></code></td>
+            <td><p>The layers to read from the tiles. If empty,
+read all layers.</p>
+</td>
+          </tr>
+      </table>
+    </p>
+
+      <h4>Returns</h4>
+      <code>ReadableStream<<code>Feature</code>></code>
+      :
+      <span class='force-inline'>
+        <p>A stream of GeoJSON Feature objects.
+Emits 'warning' events with { tile, error } when a tile from the
+requested set is not found.</p>
+
+      </span>
+
+
+
+
+</section>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
