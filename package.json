@@ -1,8 +1,14 @@
 {
   "name": "vt-geojson",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Stream GeoJSON from Mapbox vector tiles.",
-  "keywords": ["vector tile", "geojson", "vector", "tile", "mapbox"],
+  "keywords": [
+    "vector tile",
+    "geojson",
+    "vector",
+    "tile",
+    "mapbox"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/developmentseed/vt-geojson.git"
