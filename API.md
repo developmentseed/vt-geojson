@@ -7,8 +7,8 @@ Stream GeoJSON from a Mapbox Vector Tile source
 | name | type | description |
 | ---- | ---- | ----------- |
 | `uri` | `String` | the tilelive URI for the vector tile source to use. |
-| `layers` | `Array` | The layers to read from the tiles. If empty, read all layers. |
 | `tiles` | `Array` | The tiles to read from the tilelive source. Can be: an array of `[x, y, z]` tiles, a single `[x, y, z]` tile, a `[minx, miny, maxx, maxy]` bounding box, or omitted (will attempt to read entire extent of the tile source). |
+| `layers` | `Array` | The layers to read from the tiles. If empty, read all layers. |
 
 
 
