@@ -1,6 +1,6 @@
 {
   "name": "vt-geojson",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Stream GeoJSON from Mapbox vector tiles.",
   "keywords": [
     "vector tile",
