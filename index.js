@@ -14,7 +14,7 @@ module.exports = vectorTilesToGeoJSON
  * Stream GeoJSON from a Mapbox Vector Tile source
  *
  * @param {String} uri - the tilelive URI for the vector tile source to use.
- * @param {Array} tiles - The tiles to read from the tilelive source. Can be: an array of `[x, y, z]` tiles, a single `[x, y, z]` tile, a `[minx, miny, maxx, maxy]` bounding box, or omitted (will attempt to read entire extent of the tile source).
+ * @param {Array|number} tiles - The tiles to read from the tilelive source. Can be: an array of `[x, y, z]` tiles, a single `[x, y, z]` tile, a `[minx, miny, maxx, maxy]` bounding box, or a zoom level (will attempt to read entire extent of the tile source at that zoom).
  * @param {Array} layers - The layers to read from the tiles. If empty, read all layers.
  * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects.
  * Emits `warning` events with `{ tile, error }` when a tile from the
@@ -34,7 +34,13 @@ function vectorTilesToGeoJSON (uri, tiles, layers) {
     source.getInfo(function (err, info) {
       if (err) return loadError(err)
 
-      var limits = { min_zoom: info.minzoom, max_zoom: info.maxzoom }
+      var limits
+      if (typeof tiles === 'number') {
+        limits = { min_zoom: tiles, max_zoom: tiles }
+        tiles = []
+      } else {
+        limits = { min_zoom: info.minzoom, max_zoom: info.maxzoom }
+      }
       if (tiles.length === 0) {
         tiles = cover.tiles(bboxPoly(info.bounds).geometry, limits)
       } else if (tiles.length === 4 && typeof tiles[0] === 'number') {
