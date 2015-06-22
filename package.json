@@ -16,7 +16,8 @@
   "main": "index.js",
   "bin": "cli.js",
   "scripts": {
-    "test": "standard && tape test.js"
+    "test": "standard && tape test.js",
+    "docs": "node_modules/.bin/documentation -f md -g -o API.md"
   },
   "author": "Development Seed <dev@developmentseed.org> (https://developmentseed.org)",
   "license": "BSD",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "concat-stream": "^1.4.8",
+    "documentation": "^1.4.0",
     "standard": "^3.6.1",
     "tape": "^4.0.0"
   },
