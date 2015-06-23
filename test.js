@@ -1,32 +1,37 @@
+require('phantomjs-polyfill')
+
 var fs = require('fs')
 var test = require('tape')
 var cover = require('./lib/cover')
 var vtgj = require('./')
+var protocols = require('tilelive').protocols
 
-test('basic', function (t) {
-  var tileUri = 'mbtiles://' + __dirname + '/data/test.mbtiles'
-  var original = fs.readFileSync(__dirname + '/data/original.geojson')
-  original = JSON.parse(original)
-  var expected = fs.readFileSync(__dirname + '/data/expected-z13.geojson')
-  expected = JSON.parse(expected).features
+if (protocols['mbtiles:']) {
+  test('basic', function (t) {
+    var tileUri = 'mbtiles://' + __dirname + '/data/test.mbtiles'
+    var original = fs.readFileSync(__dirname + '/data/original.geojson')
+    original = JSON.parse(original)
+    var expected = fs.readFileSync(__dirname + '/data/expected-z13.geojson')
+    expected = JSON.parse(expected).features
 
-  var limits = {
-    min_zoom: 13,
-    max_zoom: 13
-  }
+    var limits = {
+      min_zoom: 13,
+      max_zoom: 13
+    }
 
-  t.plan(expected.length)
+    t.plan(expected.length)
 
-  var tiles = cover(original, limits)
-  vtgj(tileUri, tiles)
-  .on('data', function (data) {
-    var exp = expected.shift()
-    exp.geometry.coordinates = roundCoordinates(exp.geometry.coordinates, 1e4)
-    data.geometry.coordinates = roundCoordinates(data.geometry.coordinates, 1e4)
+    var tiles = cover(original, limits)
+    vtgj(tileUri, tiles)
+    .on('data', function (data) {
+      var exp = expected.shift()
+      exp.geometry.coordinates = roundCoordinates(exp.geometry.coordinates, 1e4)
+      data.geometry.coordinates = roundCoordinates(data.geometry.coordinates, 1e4)
 
-    t.deepEqual(exp, data)
+      t.deepEqual(exp, data)
+    })
   })
-})
+}
 
 var accessToken = process.env.MAPBOX_API_KEY || require('./local.js').MAPBOX_API_KEY
 
@@ -60,7 +65,9 @@ test('remote', function (t) {
     // TODO this should NOT be necessary.  I think it may be because
     // node-tilejson is holding onto the http connection, but there isn't an
     // obvious way to close it.
-    process.exit()
+    if (typeof process.exit === 'function') {
+      process.exit()
+    }
   })
   .on('error', function (err) {
     t.error(err)
