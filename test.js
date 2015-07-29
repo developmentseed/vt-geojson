@@ -1,4 +1,5 @@
 require('phantomjs-polyfill')
+require('./lib/debug').enabled = true
 
 var fs = require('fs')
 var test = require('tape')
