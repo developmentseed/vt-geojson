@@ -3,5 +3,4 @@ node_js:
 - '0.12'
 - 'iojs'
 script:
-- ./browser-test.sh
 - npm test
