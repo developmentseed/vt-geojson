@@ -43,11 +43,12 @@
     "browserify": "^10.2.4",
     "concat-stream": "^1.4.8",
     "documentation": "^1.4.0",
+    "envify": "^3.4.0",
     "phantomjs": "^1.9.17",
     "phantomjs-polyfill": "0.0.1",
     "standard": "^3.6.1",
     "tape": "^4.0.0",
-    "testling": "^1.7.1"
+    "tape-run": "^1.0.0"
   },
   "browser": {
     "zlib": false,
