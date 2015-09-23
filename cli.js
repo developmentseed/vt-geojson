@@ -12,12 +12,19 @@ if (argv._.length < 2) {
   console.log('cat bounding_polygon.geojson | vt-geojson tilelive_uri minzoom [maxzoom=minzoom] [--layers=layer1,layer2,...]')
   console.log('vt-geojson tilelive_uri minx miny maxx maxy [--layers=layer1,layer2,...]')
   console.log('vt-geojson tilelive_uri tilex tiley tilez [--layers=layer1,layer2,...]')
+  console.log('\ntilelive_uri can be a full tilelive uri, "path/to/file.mbtiles", or just a Mapbox map id.')
   process.exit()
 }
 
 var uri = argv._.shift()
 if (!/^[^\/]*\:\/\//.test(uri)) {
-  uri = 'mbtiles://' + path.resolve(uri)
+  if (/mbtiles$/.test(uri)) {
+    uri = 'mbtiles://' + path.resolve(uri)
+  } else if (!process.env.MapboxAccessToken) {
+    throw new Error('MapboxAccessToken environment variable is required for mapbox.com sources.')
+  } else {
+    uri = 'tilejson+http://api.mapbox.com/v4/' + uri + '.json?access_token=' + process.env.MapboxAccessToken
+  }
 }
 
 var featureCollection = JSONStream.stringify(
