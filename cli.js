@@ -3,6 +3,7 @@ var path = require('path')
 var concat = require('concat-stream')
 var JSONStream = require('JSONStream')
 var cover = require('tile-cover')
+var envelope = require('turf-envelope')
 var vectorTilesToGeoJSON = require('./')
 var fix = require('./lib/fix')
 var argv = require('minimist')(process.argv.slice(2))
@@ -34,10 +35,10 @@ var featureCollection = JSONStream.stringify(
 
 var layers = argv.layers ? argv.layers.split(',') : undefined
 var tiles = argv._
-if (tiles.length === 2) {
+if (!process.stdin.isTTY) {
   process.stdin.pipe(concat(function (data) {
-    var geojson = JSON.parse(data).geometry
-    tiles = cover.tiles(geojson, {
+    var geojson = envelope(JSON.parse(data))
+    tiles = cover.tiles(geojson.geometry, {
       min_zoom: tiles[0],
       max_zoom: tiles[1] || tiles[0]
     })
