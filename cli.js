@@ -6,15 +6,32 @@ var cover = require('tile-cover')
 var envelope = require('turf-envelope')
 var vectorTilesToGeoJSON = require('./')
 var fix = require('./lib/fix')
-var argv = require('minimist')(process.argv.slice(2))
+var argv = require('yargs')
+  .usage('cat polygon.geojson | $0 INPUT [--layers layer1 layer2 ...]\n' +
+    'INPUT can be a full tilelive uri, "path/to/file.mbtiles", or just a Mapbox map id.')
+  .describe('tile', 'The x y z coordinates of the tile to read.')
+  .nargs('tile', 3)
+  .describe('layers', 'The layers to read (omit for all layers)')
+  .array('layers')
+  .describe('bbox', 'The minx miny maxx maxy region to read.')
+  .nargs('bbox', 4)
+  .alias('z', 'minzoom')
+  .describe('minzoom', 'The minzoom')
+  .default('minzoom', 1)
+  .describe('maxzoom', 'The maxzoom')
+  .boolean('tilesOnly')
+  .example('cat bounding_polygon.geojson | vt-geojson tilelive_uri minzoom [maxzoom=minzoom] [--layers=layer1,layer2,...]')
+  .example('vt-geojson tilelive_uri minx miny maxx maxy [--layers=layer1,layer2,...]')
+  .example('vt-geojson tilelive_uri tilex tiley tilez [--layers=layer1,layer2,...]')
+  .demand(1)
+  .argv
 
-if (argv._.length < 2) {
-  console.log('Usage:')
-  console.log('cat bounding_polygon.geojson | vt-geojson tilelive_uri minzoom [maxzoom=minzoom] [--layers=layer1,layer2,...]')
-  console.log('vt-geojson tilelive_uri minx miny maxx maxy [--layers=layer1,layer2,...]')
-  console.log('vt-geojson tilelive_uri tilex tiley tilez [--layers=layer1,layer2,...]')
-  console.log('\ntilelive_uri can be a full tilelive uri, "path/to/file.mbtiles", or just a Mapbox map id.')
-  process.exit()
+if (!argv.maxzoom) {
+  argv.maxzoom = argv.minzoom
+}
+
+if (argv.tile) {
+  argv.tiles = [argv.tile]
 }
 
 var uri = argv._.shift()
@@ -33,23 +50,28 @@ var featureCollection = JSONStream.stringify(
   '\n,\n',
   '] }')
 
-var layers = argv.layers ? argv.layers.split(',') : undefined
-var tiles = argv._
 if (!process.stdin.isTTY) {
   process.stdin.pipe(concat(function (data) {
     var geojson = envelope(JSON.parse(data))
-    tiles = cover.tiles(geojson.geometry, {
-      min_zoom: tiles[0],
-      max_zoom: tiles[1] || tiles[0]
+    argv.tiles = cover.tiles(geojson.geometry, {
+      min_zoom: argv.minzoom,
+      max_zoom: argv.maxzoom
     })
-    vectorTilesToGeoJSON(uri, tiles, layers)
-      .pipe(fix())
-      .pipe(featureCollection)
-      .pipe(process.stdout)
+    go()
   }))
 } else {
-  vectorTilesToGeoJSON(uri, tiles, layers)
-    .pipe(fix())
+  go()
+}
+
+function go () {
+  var s = vectorTilesToGeoJSON(uri, argv)
+  if (!argv.tilesOnly) {
+    s.pipe(fix())
     .pipe(featureCollection)
     .pipe(process.stdout)
+  } else {
+    s.on('data', function (t) {
+      process.stdout.write(t.join(' ') + '\n')
+    })
+  }
 }

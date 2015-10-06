@@ -1,7 +1,7 @@
 require('phantomjs-polyfill')
 
 var fs = require('fs')
-var test = require('tape')
+var test = require('tap').test
 var cover = require('./lib/cover')
 var vtgj = require('./')
 var protocols = require('tilelive').protocols
@@ -22,7 +22,7 @@ if (protocols['mbtiles:']) {
     t.plan(expected.length)
 
     var tiles = cover(original, limits)
-    vtgj(tileUri, tiles)
+    vtgj(tileUri, { tiles: tiles })
     .on('data', function (data) {
       var exp = expected.shift()
       exp.geometry.coordinates = roundCoordinates(exp.geometry.coordinates, 1e4)
@@ -36,6 +36,8 @@ if (protocols['mbtiles:']) {
 var accessToken = process.env.MAPBOX_API_KEY
 
 test('remote', function (t) {
+  t.plan(2)
+  t.ok(accessToken, 'MAPBOX_API_KEY environment variable is set.')
   var tileUri = 'tilejson+http://api.tiles.mapbox.com/v4/devseed.73553afc.json?access_token=' + accessToken
   var dragon = fs.readFileSync(__dirname + '/data/dragon.geojson')
   dragon = JSON.parse(dragon)
@@ -45,11 +47,9 @@ test('remote', function (t) {
     max_zoom: 0
   }
 
-  t.plan(1)
-
   var expected = dragon.features
   var tiles = cover(dragon, limits)
-  vtgj(tileUri, tiles)
+  vtgj(tileUri, {tiles: tiles})
   .on('data', function (data) {
     var exp = expected.shift()
     exp.geometry.coordinates = roundCoordinates(exp.geometry.coordinates, 1e4)

@@ -14,47 +14,55 @@ module.exports = vectorTilesToGeoJSON
  * Stream GeoJSON from a Mapbox Vector Tile source
  *
  * @param {string} uri - the tilelive URI for the vector tile source to use.
- * @param {Array|number} tiles - The tiles to read from the tilelive source. Can be: an array of `[x, y, z]` tiles, a single `[x, y, z]` tile, a `[minx, miny, maxx, maxy]` bounding box, or a zoom level (will attempt to read entire extent of the tile source at that zoom).
- * @param {Array} layers - The layers to read from the tiles. If empty, read all layers.
- * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects.
- * Emits `warning` events with `{ tile, error }` when a tile from the
- * requested set is not found.
+ * @param {object} options - options
+ * @param {Array<string>} options.layers - An array of layer names to read from tiles.  If empty, read all layers
+ * @param {Array} options.tiles - The tiles to read from the tilelive source.  If empty, use `options.bbox` instead.
+ * @param {Array} options.bbox - The [minx, miny, maxx, maxy] bounds to read from the source. Ignored if `options.tiles` is set.  If empty, use the bounds from the input source's metadata.
+ * @param {number} options.minzoom - Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
+ * @param {number} options.maxzoom - Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
+ * @param {boolean} options.tilesOnly - Output [z, y, x] tile coordinates instead of actually reading tiles.  Useful for debugging.
+ * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects. Emits `warning` events with `{ tile, error }` when a tile from the requested set is not found.
  */
-function vectorTilesToGeoJSON (uri, tiles, layers) {
-  if (!tiles) tiles = []
-  if (!layers && tiles.length > 0 && typeof tiles[0] === 'string') {
-    layers = tiles
-  }
-  if (layers && layers.length === 0) layers = null
-  var stream = through.obj()
+function vectorTilesToGeoJSON (uri, options) {
+  options = options || {}
 
+  if (options.layers && options.layers.length === 0) options.layers = null
+
+  var stream = through.obj()
   loadSource(uri, function (err, source) {
     if (err) return loadError(err)
+
+    var tiles = options.tiles
+    if (tiles) return next()
 
     source.getInfo(function (err, info) {
       if (err) return loadError(err)
 
-      var limits
-      if (typeof tiles === 'number') {
-        limits = { min_zoom: tiles, max_zoom: tiles }
-        tiles = []
-      } else {
-        limits = { min_zoom: info.minzoom, max_zoom: info.maxzoom }
-      }
-      if (tiles.length === 0) {
-        tiles = cover.tiles(bboxPoly(info.bounds).geometry, limits)
-      } else if (tiles.length === 4 && typeof tiles[0] === 'number') {
-        tiles = cover.tiles(bboxPoly(tiles).geometry, limits)
-      } else if (tiles.length === 3 && typeof tiles[0] === 'number') {
-        tiles = [tiles]
+      var limits = {
+        min_zoom: options.minzoom || info.minzoom,
+        max_zoom: options.maxzoom || info.maxzoom
       }
 
-      (function next () {
-        if (tiles.length === 0) return stream.end()
-        var tile = tiles.pop()
-        writeTile(source, tile, stream, next)
-      })()
+      if (options.bbox) {
+        tiles = cover.tiles(bboxPoly(options.bbox).geometry, limits)
+      } else {
+        tiles = cover.tiles(bboxPoly(info.bounds).geometry, limits)
+      }
+
+      next()
     })
+
+    function next () {
+      if (tiles.length === 0) return stream.end()
+
+      if (options.tilesOnly) {
+        tiles.forEach(stream.write.bind(stream))
+        return stream.end()
+      }
+
+      var tile = tiles.pop()
+      writeTile(source, tile, stream, next)
+    }
   })
 
   return stream
@@ -97,11 +105,11 @@ function vectorTilesToGeoJSON (uri, tiles, layers) {
 
         Object.keys(vt.layers)
         .filter(function (ln) {
-          return !layers || layers.indexOf(ln) >= 0
+          return !options.layers || options.layers.indexOf(ln) >= 0
         })
         .forEach(function (ln) {
           var layer = vt.layers[ln]
-          if (layers && layers.indexOf(ln) < 0) return
+          if (options.layers && options.layers.indexOf(ln) < 0) return
 
           for (var i = 0; i < layer.length; i++) {
             var feat = layer.feature(i).toGeoJSON(x, y, z)
