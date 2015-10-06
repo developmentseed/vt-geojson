@@ -62,7 +62,7 @@ function vtgeojson (uri, options) {
       }
 
       var tile = tiles.pop()
-      writeTile(source, tile, stream, next)
+      setImmediate(writeTile.bind(null, source, tile, stream, next))
     }
   })
 
@@ -84,6 +84,7 @@ function vtgeojson (uri, options) {
     var x = tile[0]
     var y = tile[1]
     var z = tile[2]
+
     source.getTile(z, x, y, function (err, tiledata, opts) {
       if (err) {
         tileError(tile, err)
