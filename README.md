@@ -8,6 +8,18 @@ Extract GeoJSON from Mapbox vector tiles.
 
 # Usage
 
+## CLI
+
+Install with `npm install -g vt-geojson`, and then:
+
+```bash
+cat bounding_polygon.geojson | vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN -z 12
+vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN --bbox minx miny maxx maxy
+vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN --tile tilex tiley tilez
+```
+
+## Node
+
 First `npm install vt-geojson` and then:
 
 ```javascript
@@ -30,14 +42,33 @@ vtGeoJson(source, tiles)
   })
 ```
 
-Read the [API docs](API.md)
+# API
+
+## vtgeojson
+
+Stream GeoJSON from a Mapbox Vector Tile source
 
 
-## CLI
+**Parameters**
 
-Install with `npm install -g vt-geojson`, and then:
-```bash
-cat bounding_polygon.geojson | vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN minzoom maxzoom
-vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN minx miny maxx maxy
-vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN tilex tiley tilez
-```
+-   `uri` **string** the tilelive URI for the vector tile source to use.
+
+-   `options` **object** options
+    -   `options.layers` **Array<string>** An array of layer names to read from tiles.  If empty, read all layers
+
+    -   `options.tiles` **Array** The tiles to read from the tilelive source.  If empty, use `options.bounds` instead.
+
+    -   `options.bounds` **Array** The [minx, miny, maxx, maxy] bounds or a GeoJSON Feature, FeatureCollection, or Geometry defining the region to read from source. Ignored if `options.tiles` is set.  If empty, use the bounds from the input source's metadata.
+
+    -   `options.minzoom` **number** Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
+
+    -   `options.maxzoom` **number** Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
+
+    -   `options.tilesOnly` **boolean** Output [z, y, x] tile coordinates instead of actually reading tiles.  Useful for debugging.
+
+
+
+Returns **ReadableStream<Feature>** A stream of GeoJSON Feature objects. Emits `warning` events with `{ tile, error }` when a tile from the requested set is not found.
+
+
+

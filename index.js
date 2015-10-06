@@ -9,7 +9,7 @@ var bboxPoly = require('turf-bbox-polygon')
 // this is abstracted out for browserify purposes
 var loadSource = require('./lib/tilelive-sources')
 
-module.exports = vectorTilesToGeoJSON
+module.exports = vtgeojson
 
 /**
  * Stream GeoJSON from a Mapbox Vector Tile source
@@ -24,7 +24,7 @@ module.exports = vectorTilesToGeoJSON
  * @param {boolean} options.tilesOnly - Output [z, y, x] tile coordinates instead of actually reading tiles.  Useful for debugging.
  * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects. Emits `warning` events with `{ tile, error }` when a tile from the requested set is not found.
  */
-function vectorTilesToGeoJSON (uri, options) {
+function vtgeojson (uri, options) {
   options = options || {}
 
   if (options.layers && options.layers.length === 0) options.layers = null
