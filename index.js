@@ -2,6 +2,7 @@ var zlib = require('zlib')
 var Pbf = require('pbf')
 var through = require('through2')
 var cover = require('tile-cover')
+var envelope = require('turf-envelope')
 var VectorTile = require('vector-tile').VectorTile
 var bboxPoly = require('turf-bbox-polygon')
 
@@ -16,8 +17,8 @@ module.exports = vectorTilesToGeoJSON
  * @param {string} uri - the tilelive URI for the vector tile source to use.
  * @param {object} options - options
  * @param {Array<string>} options.layers - An array of layer names to read from tiles.  If empty, read all layers
- * @param {Array} options.tiles - The tiles to read from the tilelive source.  If empty, use `options.bbox` instead.
- * @param {Array} options.bbox - The [minx, miny, maxx, maxy] bounds to read from the source. Ignored if `options.tiles` is set.  If empty, use the bounds from the input source's metadata.
+ * @param {Array} options.tiles - The tiles to read from the tilelive source.  If empty, use `options.bounds` instead.
+ * @param {Array} options.bounds - The [minx, miny, maxx, maxy] bounds or a GeoJSON Feature, FeatureCollection, or Geometry defining the region to read from source. Ignored if `options.tiles` is set.  If empty, use the bounds from the input source's metadata.
  * @param {number} options.minzoom - Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
  * @param {number} options.maxzoom - Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
  * @param {boolean} options.tilesOnly - Output [z, y, x] tile coordinates instead of actually reading tiles.  Useful for debugging.
@@ -31,10 +32,8 @@ function vectorTilesToGeoJSON (uri, options) {
   var stream = through.obj()
   loadSource(uri, function (err, source) {
     if (err) return loadError(err)
-
     var tiles = options.tiles
     if (tiles) return next()
-
     source.getInfo(function (err, info) {
       if (err) return loadError(err)
 
@@ -43,8 +42,10 @@ function vectorTilesToGeoJSON (uri, options) {
         max_zoom: options.maxzoom || info.maxzoom
       }
 
-      if (options.bbox) {
-        tiles = cover.tiles(bboxPoly(options.bbox).geometry, limits)
+      if (Array.isArray(options.bounds)) {
+        tiles = cover.tiles(bboxPoly(options.bounds).geometry, limits)
+      } else if (options.bounds) {
+        tiles = cover.tiles(envelope(options.bounds).geometry, limits)
       } else {
         tiles = cover.tiles(bboxPoly(info.bounds).geometry, limits)
       }

@@ -2,8 +2,6 @@
 var path = require('path')
 var concat = require('concat-stream')
 var JSONStream = require('JSONStream')
-var cover = require('tile-cover')
-var envelope = require('turf-envelope')
 var vectorTilesToGeoJSON = require('./')
 var fix = require('./lib/fix')
 var argv = require('yargs')
@@ -13,8 +11,8 @@ var argv = require('yargs')
   .nargs('tile', 3)
   .describe('layers', 'The layers to read (omit for all layers)')
   .array('layers')
-  .describe('bbox', 'The minx miny maxx maxy region to read.')
-  .nargs('bbox', 4)
+  .describe('bounds', 'The minx miny maxx maxy region to read.')
+  .nargs('bounds', 4)
   .alias('z', 'minzoom')
   .describe('minzoom', 'The minzoom')
   .default('minzoom', 1)
@@ -52,11 +50,7 @@ var featureCollection = JSONStream.stringify(
 
 if (!process.stdin.isTTY) {
   process.stdin.pipe(concat(function (data) {
-    var geojson = envelope(JSON.parse(data))
-    argv.tiles = cover.tiles(geojson.geometry, {
-      min_zoom: argv.minzoom,
-      max_zoom: argv.maxzoom
-    })
+    argv.bounds = JSON.parse(data)
     go()
   }))
 } else {

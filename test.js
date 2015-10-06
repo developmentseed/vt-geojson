@@ -31,6 +31,52 @@ if (protocols['mbtiles:']) {
       t.deepEqual(exp, data)
     })
   })
+
+  test('bbox bounds', function (t) {
+    var tileUri = 'mbtiles://' + __dirname + '/data/test.mbtiles'
+    var original = fs.readFileSync(__dirname + '/data/original.geojson')
+    original = JSON.parse(original)
+    var expected = fs.readFileSync(__dirname + '/data/expected-bounds-z13.geojson')
+    expected = JSON.parse(expected).features
+
+    t.plan(expected.length)
+
+    vtgj(tileUri, {
+      bounds: [ -77.1175, 38.8175, -76.9478, 38.9546 ],
+      minzoom: 13,
+      maxzoom: 13
+    })
+    .on('data', function (data) {
+      var exp = expected.shift()
+      exp.geometry.coordinates = roundCoordinates(exp.geometry.coordinates, 1e4)
+      data.geometry.coordinates = roundCoordinates(data.geometry.coordinates, 1e4)
+
+      t.deepEqual(exp, data)
+    })
+  })
+
+  test('geojson bounds', function (t) {
+    var tileUri = 'mbtiles://' + __dirname + '/data/test.mbtiles'
+    var original = fs.readFileSync(__dirname + '/data/original.geojson')
+    original = JSON.parse(original)
+    var expected = fs.readFileSync(__dirname + '/data/expected-bounds-z13.geojson')
+    expected = JSON.parse(expected).features
+
+    t.plan(expected.length)
+
+    vtgj(tileUri, {
+      bounds: original,
+      minzoom: 13,
+      maxzoom: 13
+    })
+    .on('data', function (data) {
+      var exp = expected.shift()
+      exp.geometry.coordinates = roundCoordinates(exp.geometry.coordinates, 1e4)
+      data.geometry.coordinates = roundCoordinates(data.geometry.coordinates, 1e4)
+
+      t.deepEqual(exp, data)
+    })
+  })
 }
 
 var accessToken = process.env.MAPBOX_API_KEY
