@@ -83,8 +83,8 @@ if (!process.stdin.isTTY) {
 function go () {
   var s = vectorTilesToGeoJSON(uri, argv)
   if (!argv.tilesOnly) {
-    s.pipe(fix())
-    .pipe(featureCollection)
+    if (argv.clean) { s = s.pipe(fix()) }
+    s.pipe(featureCollection)
     .pipe(process.stdout)
   } else {
     s.on('data', function (t) {
