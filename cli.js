@@ -7,17 +7,35 @@ var fix = require('./lib/fix')
 var argv = require('yargs')
   .usage('cat polygon.geojson | $0 INPUT [--layers layer1 layer2 ...]\n' +
     'INPUT can be a full tilelive uri, "path/to/file.mbtiles", or just a Mapbox map id.')
-  .describe('tile', 'The x y z coordinates of the tile to read.')
-  .nargs('tile', 3)
-  .describe('layers', 'The layers to read (omit for all layers)')
-  .array('layers')
-  .describe('bounds', 'The minx miny maxx maxy region to read.')
-  .nargs('bounds', 4)
-  .alias('z', 'minzoom')
-  .describe('minzoom', 'The minzoom')
-  .default('minzoom', 1)
-  .describe('maxzoom', 'The maxzoom')
-  .boolean('tilesOnly')
+  .options({
+    tile: {
+      describe: 'The x y z coordinates of the tile to read.',
+      nargs: 3
+    },
+    layers: {
+      describe: 'The layers to read (omit for all layers)',
+      array: true
+    },
+    bounds: {
+      describe: 'The minx miny maxx maxy region to read.',
+      nargs: 4
+    },
+    minzoom: {
+      alias: 'z'
+    },
+    maxzoom: {
+      alias: 'Z'
+    },
+    tilesOnly: {
+      describe: 'Only list the tiles that would be read, instead of actually reading them.',
+      boolean: true
+    },
+    clean: {
+      describe: 'Attempt to fix degenerate features and filter out any that don\'t pass geojsonhint',
+      boolean: true,
+      default: true
+    }
+  })
   .example('cat bounding_polygon.geojson | vt-geojson tilelive_uri minzoom [maxzoom=minzoom] [--layers=layer1,layer2,...]')
   .example('vt-geojson tilelive_uri minx miny maxx maxy [--layers=layer1,layer2,...]')
   .example('vt-geojson tilelive_uri tilex tiley tilez [--layers=layer1,layer2,...]')
@@ -30,6 +48,11 @@ if (!argv.maxzoom) {
 
 if (argv.tile) {
   argv.tiles = [argv.tile]
+}
+
+if (argv.testargs) {
+  console.log(argv)
+  process.exit()
 }
 
 var uri = argv._.shift()
