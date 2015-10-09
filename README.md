@@ -71,4 +71,9 @@ Stream GeoJSON from a Mapbox Vector Tile source
 Returns **ReadableStream<Feature>** A stream of GeoJSON Feature objects. Emits `warning` events with `{ tile, error }` when a tile from the requested set is not found.
 
 
+# [Contributing](CONTRIBUTING.md)
+
+This is an [OPEN Open Source](http://openopensource.org/) Project. This means that:
+
+Individuals making significant and valuable contributions are given commit-access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
 
