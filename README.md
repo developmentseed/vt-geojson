@@ -13,9 +13,9 @@ Extract GeoJSON from Mapbox vector tiles.
 Install with `npm install -g vt-geojson`, and then:
 
 ```bash
+vt-geojson /path/to/tiles.mbtiles --bbox minx miny maxx maxy
 cat bounding_polygon.geojson | vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN -z 12
-vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN --bbox minx miny maxx maxy
-vt-geojson tilejson+http://api.tiles.mapbox.com/v4/YOUR-MAPID?access_token=YOUR_MAPBOX_TOKEN --tile tilex tiley tilez
+vt-geojson someone.blahblah --tile tilex tiley tilez # ('someone.blahblah' is a mapid)
 ```
 
 ## Node
