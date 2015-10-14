@@ -28,7 +28,7 @@
     "debug": "^2.2.0",
     "geojsonhint": "^1.0.0",
     "get": "anandthakker/node-get#4d8d12998f0ecd4596193f5bd2dbd092a4ea5728",
-    "mbtiles": "anandthakker/node-mbtiles",
+    "mbtiles": "^0.8.1",
     "pbf": "^1.3.2",
     "through2": "^0.6.5",
     "tile-cover": "^2.4.1",
