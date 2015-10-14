@@ -6,6 +6,9 @@ var envelope = require('turf-envelope')
 var VectorTile = require('vector-tile').VectorTile
 var bboxPoly = require('turf-bbox-polygon')
 
+// see https://github.com/substack/insert-module-globals/pull/40
+var setImmediate = require('timers').setImmediate
+
 // this is abstracted out for browserify purposes
 var loadSource = require('./lib/tilelive-sources')
 

@@ -42,6 +42,22 @@ vtGeoJson(source, tiles)
   })
 ```
 
+## Browser
+
+This module should work with browserify.  There's a minimal example of
+using it in the browser
+[here](https://github.com/developmentseed/vt-geojson/blob/master/example/browser.js).
+Try it with:
+
+```
+npm install -g budo
+budo example/browser.js
+```
+
+Then go to http://localhost:9966/?mapid=mapbox.mapbox-streets-v6&tile=73/97/8&layers=road&access_token=YOUR_MAPBOX_ACCESS_TOKEN
+
+
+
 # API
 
 ## vtgeojson
