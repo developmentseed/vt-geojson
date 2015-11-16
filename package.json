@@ -16,7 +16,7 @@
   "main": "index.js",
   "bin": "cli.js",
   "scripts": {
-    "test": "standard && node_modules/.bin/tap --coverage test.js",
+    "test": "standard && node_modules/.bin/tap --coverage test/*.js",
     "docs": "node_modules/.bin/documentation -f md -g -o API.md"
   },
   "author": "Development Seed <dev@developmentseed.org> (https://developmentseed.org)",

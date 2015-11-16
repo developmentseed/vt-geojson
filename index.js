@@ -31,12 +31,16 @@ function vtgeojson (uri, options) {
   options = options || {}
 
   if (options.layers && options.layers.length === 0) options.layers = null
+  var stream = (options.tilesOnly) ? through.obj() : through.obj(writeTile)
 
-  var stream = through.obj()
-  loadSource(uri, function (err, source) {
+  var source
+  loadSource(uri, function (err, src) {
     if (err) return loadError(err)
+
+    source = src
     var tiles = options.tiles
     if (tiles) return next()
+
     source.getInfo(function (err, info) {
       if (err) return loadError(err)
 
@@ -57,15 +61,13 @@ function vtgeojson (uri, options) {
     })
 
     function next () {
-      if (tiles.length === 0) return stream.end()
-
-      if (options.tilesOnly) {
-        tiles.forEach(stream.write.bind(stream))
+      if (tiles.length === 0) {
         return stream.end()
       }
-
       var tile = tiles.pop()
-      setImmediate(writeTile.bind(null, source, tile, stream, next))
+      stream.write(tile)
+      // ensure async, because some tilelive sources callback sync
+      setImmediate(next)
     }
   })
 
@@ -83,7 +85,8 @@ function vtgeojson (uri, options) {
     })
   }
 
-  function writeTile (source, tile, stream, next) {
+  function writeTile (tile, _, next) {
+    var self = this
     var x = tile[0]
     var y = tile[1]
     var z = tile[2]
@@ -108,19 +111,25 @@ function vtgeojson (uri, options) {
 
         var vt = new VectorTile(new Pbf(tiledata))
 
-        Object.keys(vt.layers)
+        var layers = Object.keys(vt.layers)
         .filter(function (ln) {
           return !options.layers || options.layers.indexOf(ln) >= 0
         })
-        .forEach(function (ln) {
+
+        for (var j = 0; j < layers.length; j++) {
+          var ln = layers[j]
           var layer = vt.layers[ln]
           if (options.layers && options.layers.indexOf(ln) < 0) return
 
           for (var i = 0; i < layer.length; i++) {
-            var feat = layer.feature(i).toGeoJSON(x, y, z)
-            stream.write(feat)
+            try {
+              var feat = layer.feature(i).toGeoJSON(x, y, z)
+              self.push(feat)
+            } catch (e) {
+              return next(e)
+            }
           }
-        })
+        }
 
         next()
       }

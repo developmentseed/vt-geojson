@@ -2,8 +2,8 @@ require('phantomjs-polyfill')
 
 var fs = require('fs')
 var test = require('tap').test
-var cover = require('./lib/cover')
-var vtgj = require('./')
+var cover = require('../lib/cover')
+var vtgj = require('../')
 var protocols = require('tilelive').protocols
 
 if (protocols['mbtiles:']) {
