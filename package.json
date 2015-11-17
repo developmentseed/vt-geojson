@@ -17,7 +17,8 @@
   "bin": "cli.js",
   "scripts": {
     "test": "standard && node_modules/.bin/tap --coverage test/*.js",
-    "docs": "node_modules/.bin/documentation -f md -g -o API.md"
+    "docs": "documentation-readme -s API",
+    "prepublish": "documentation-readme -s API -c"
   },
   "author": "Development Seed <dev@developmentseed.org> (https://developmentseed.org)",
   "license": "BSD",
@@ -39,7 +40,7 @@
   },
   "devDependencies": {
     "concat-stream": "^1.4.8",
-    "documentation": "^1.4.0",
+    "documentation-readme": "^2.1.0",
     "geojson-equality": "^0.1.6",
     "phantomjs-polyfill": "0.0.1",
     "standard": "^3.6.1",

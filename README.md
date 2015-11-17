@@ -49,14 +49,10 @@ using it in the browser
 [here](https://github.com/developmentseed/vt-geojson/blob/master/example/browser.js).
 Try it with:
 
-```
-npm install -g budo
-budo example/browser.js
-```
+    npm install -g budo
+    budo example/browser.js
 
-Then go to http://localhost:9966/?mapid=mapbox.mapbox-streets-v6&tile=73/97/8&layers=road&access_token=YOUR_MAPBOX_ACCESS_TOKEN
-
-
+Then go to <http://localhost:9966/?mapid=mapbox.mapbox-streets-v6&tile=73/97/8&layers=road&access_token=YOUR_MAPBOX_ACCESS_TOKEN>
 
 # API
 
@@ -64,32 +60,22 @@ Then go to http://localhost:9966/?mapid=mapbox.mapbox-streets-v6&tile=73/97/8&la
 
 Stream GeoJSON from a Mapbox Vector Tile source
 
-
 **Parameters**
 
 -   `uri` **string** the tilelive URI for the vector tile source to use.
-
 -   `options` **object** options
-    -   `options.layers` **Array<string>** An array of layer names to read from tiles.  If empty, read all layers
-
+    -   `options.layers` **Array&lt;string&gt;** An array of layer names to read from tiles.  If empty, read all layers
     -   `options.tiles` **Array** The tiles to read from the tilelive source.  If empty, use `options.bounds` instead.
-
     -   `options.bounds` **Array** The [minx, miny, maxx, maxy] bounds or a GeoJSON Feature, FeatureCollection, or Geometry defining the region to read from source. Ignored if `options.tiles` is set.  If empty, use the bounds from the input source's metadata.
-
     -   `options.minzoom` **number** Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
-
     -   `options.maxzoom` **number** Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
-
     -   `options.tilesOnly` **boolean** Output [z, y, x] tile coordinates instead of actually reading tiles.  Useful for debugging.
+    -   `options.strict` **boolean** Emit an error and end the stream if a tile is not found or can't be read
 
-
-
-Returns **ReadableStream<Feature>** A stream of GeoJSON Feature objects. Emits `warning` events with `{ tile, error }` when a tile from the requested set is not found.
-
+Returns **ReadableStream&lt;Feature&gt;** A stream of GeoJSON Feature objects. Emits `warning` events with `{ tile, error }` when a tile from the requested set is not found or can't be read.
 
 # [Contributing](CONTRIBUTING.md)
 
 This is an [OPEN Open Source](http://openopensource.org/) Project. This means that:
 
 Individuals making significant and valuable contributions are given commit-access to the project to contribute as they see fit. This project is more like an open wiki than a standard guarded open source project.
-
