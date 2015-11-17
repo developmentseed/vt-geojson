@@ -34,6 +34,11 @@ var argv = require('yargs')
       describe: 'Attempt to fix degenerate features and filter out any that don\'t pass geojsonhint',
       boolean: true,
       default: true
+    },
+    strict: {
+      describe: 'Emit an error and end the stream if a tile is not found or can\'t be read',
+      boolean: true,
+      default: false
     }
   })
   .example('cat bounding_polygon.geojson | vt-geojson tilelive_uri minzoom [maxzoom=minzoom] [--layers=layer1,layer2,...]')

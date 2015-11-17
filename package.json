@@ -40,9 +40,11 @@
   "devDependencies": {
     "concat-stream": "^1.4.8",
     "documentation": "^1.4.0",
+    "geojson-equality": "^0.1.6",
     "phantomjs-polyfill": "0.0.1",
     "standard": "^3.6.1",
-    "tap": "^2.0.0"
+    "tap": "^2.0.0",
+    "tilelive-file": "0.0.3"
   },
   "browser": {
     "zlib": false,

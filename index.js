@@ -25,7 +25,8 @@ module.exports = vtgeojson
  * @param {number} options.minzoom - Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
  * @param {number} options.maxzoom - Defaults to the source metadata minzoom.  Ignored if `options.tiles` is set.
  * @param {boolean} options.tilesOnly - Output [z, y, x] tile coordinates instead of actually reading tiles.  Useful for debugging.
- * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects. Emits `warning` events with `{ tile, error }` when a tile from the requested set is not found.
+ * @param {boolean} options.strict - Emit an error and end the stream if a tile is not found or can't be read
+ * @return {ReadableStream<Feature>} A stream of GeoJSON Feature objects. Emits `warning` events with `{ tile, error }` when a tile from the requested set is not found or can't be read.
  */
 function vtgeojson (uri, options) {
   options = options || {}
@@ -83,6 +84,7 @@ function vtgeojson (uri, options) {
       tile: tile,
       error: err
     })
+    if (options.strict) { return err }
   }
 
   function writeTile (tile, _, next) {
@@ -93,8 +95,7 @@ function vtgeojson (uri, options) {
 
     source.getTile(z, x, y, function (err, tiledata, opts) {
       if (err) {
-        tileError(tile, err)
-        return next()
+        return next(tileError(tile, err))
       }
 
       if (opts['Content-Encoding'] === 'gzip') {
@@ -105,8 +106,7 @@ function vtgeojson (uri, options) {
 
       function processTile (err, tiledata) {
         if (err) {
-          tileError(tile, err)
-          return next()
+          return next(tileError(tile, err))
         }
 
         var vt = new VectorTile(new Pbf(tiledata))
@@ -126,7 +126,14 @@ function vtgeojson (uri, options) {
               var feat = layer.feature(i).toGeoJSON(x, y, z)
               self.push(feat)
             } catch (e) {
-              return next(e)
+              var error = new Error(
+                'Error reading feature ' + i + ' from layer ' + ln + ':' + e.toString()
+              )
+              if (options.strict) {
+                return next(error)
+              } else {
+                tileError(tile, error)
+              }
             }
           }
         }
